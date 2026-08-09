@@ -484,6 +484,7 @@
       <div id="lostBanner">🆘 유실 모드 작동 중 — 주변 산책 유저에게 초코의 사진과 특징이 전파되고 있어요 <u onclick="endLost()" style="float:right;cursor:pointer">해제</u></div>
       <div id="sheet">
         <div class="grab"></div>
+        <div id="hrLine" style="display:none;text-align:center;font-size:11.5px;color:#E8446D;font-weight:800;margin-bottom:6px">❤️ <span id="hrV">--</span> bpm · ⌚ <span id="hrW">갤럭시 워치</span> 연동 중</div>
         <div id="courseInfo"><span id="courseTxt">📍 산책할 경로를 먼저 만들어 주세요</span> <button id="btnPreset">🌳 추천 코스</button><button id="btnShuffle" title="다른 코스 뽑기">🎲 다시뽑기</button></div>
         <div class="statRow">
           <div class="stat"><div class="v" id="stTime">00:00</div><div class="k">시간</div></div>
@@ -495,6 +496,7 @@
         <div class="subBtns">
           <button class="subBtn on" id="modeSim">🎮 시뮬레이션</button>
           <button class="subBtn" id="modeGps">📡 실제 GPS</button>
+          <button class="subBtn" id="btnWatchSet">⌚ 워치</button>
         </div>
       </div>
 
@@ -856,6 +858,8 @@
       <div class="courseRow" onclick="pickCourse(1.5)"><div class="em">🐾</div><div><b>가볍게 1.5km</b><span>내 위치 기준 · 약 23분 · 노견·소형견 추천</span></div><div class="go">선택 ›</div></div>
       <div class="courseRow" onclick="pickCourse(3)"><div class="em">🚶</div><div><b>기본 3km</b><span>내 위치 기준 · 약 45분 · 매일 산책 코스</span></div><div class="go">선택 ›</div></div>
       <div class="courseRow" onclick="pickCourse(5)"><div class="em">💪</div><div><b>챌린지 5km</b><span>내 위치 기준 · 약 1시간 15분 · 대형견·활동견</span></div><div class="go">선택 ›</div></div>
+      <div class="courseRow" onclick="pickCourse('raid')" style="border:1.5px solid #F9D2DF;background:#FFF7FA"><div class="em">⚔️</div><div><b>영토 뺏기 코스</b><span>내 주변 상대 영토를 관통해 탈환하는 자동 코스</span></div><div class="go">선택 ›</div></div>
+      <div style="font-size:10.5px;color:#aaa;margin-top:6px">* 코스는 여러 후보 중 막다른길·왕복이 적고 큰길·직선 위주인 경로를 자동 선별해요</div>
       <div style="font-size:10.5px;color:#aaa;margin-top:4px">* 실제 보행길 기준으로 출발지로 돌아오는 왕복 코스가 생성돼요</div>
       <button class="closeBtn" data-close="courseModal" style="margin-top:10px">닫기</button>
     </div>
@@ -895,6 +899,19 @@
         <button onclick="sendChat()">전송</button>
       </div>
       <button class="closeBtn" data-close="chatModal" style="margin-top:10px">닫기</button>
+    </div>
+  </div>
+
+  <!-- 워치 연동 -->
+  <div class="modalBg" id="watchModal">
+    <div class="modal" style="max-width:350px;text-align:left">
+      <h2 style="text-align:center">⌚ 스마트워치 연동</h2>
+      <div class="sub" style="text-align:center">산책 중 심박·칼로리가 자동 기록돼요</div>
+      <div class="careItem" onclick="setWatch('Apple Watch')" style="cursor:pointer"><div class="em"></div><div class="tx"><b>Apple Watch</b><span>건강(HealthKit) 앱을 통해 연동 — 별도 앱 설치 불필요</span></div><div class="due ok" id="wA">연결</div></div>
+      <div class="careItem" onclick="setWatch('갤럭시 워치')" style="cursor:pointer"><div class="em">⌚</div><div class="tx"><b>갤럭시 워치 / Wear OS</b><span>삼성 헬스 → 헬스 커넥트 통해 연동</span></div><div class="due ok" id="wG">연결됨 ✓</div></div>
+      <div class="careItem" onclick="toast('Strava 계정 연결 (데모) — 산책 기록을 스트라바에도 자동 업로드해요')" style="cursor:pointer"><div class="em">🏃</div><div class="tx"><b>Strava 가져오기 (선택)</b><span>기존 러닝 기록 불러오기 + 자동 업로드</span></div><div class="due ok">연결</div></div>
+      <div style="font-size:10.5px;color:#aaa;margin:8px 0 12px;line-height:1.6">💡 폰의 공식 건강 플랫폼(HealthKit·헬스 커넥트)을 통해 연동해서 워치 기종에 상관없이 안정적으로 작동해요. 산책 종료 시 심박·칼로리가 자동으로 기록에 합쳐져요.</div>
+      <button class="closeBtn" data-close="watchModal">닫기</button>
     </div>
   </div>
 
@@ -1157,8 +1174,15 @@ SHOPS.forEach(s => {
 // ================== 산책 로직: 자취가 남고, 출발지로 돌아오면 구역 점령 ==================
 let walking=false, useGps=false, walkTimer=null, gpsWatch=null;
 let startTime=0, dist=0, land=0, steals=0, loopDone=false, areaClaimed=0;
-let segIdx=0, segFrac=0, lastPos=null, walkStart=null;
+let segIdx=0, segFrac=0, lastPos=null, walkStart=null, walkFlag=null;
 let myBand=null, myLine=null, dogMarker=null, fillPoly=null;
+const gpsAccs=[];                       // GPS 오차(m) 표본 → 평균 기반 복귀 반경
+let watchOn=true, watchName='갤럭시 워치', hr=118, hrSum=0, hrN=0;   // ⌚ 워치 심박
+function closeRadius(){                  // 오차 평균의 1.8배(최소 40m, 최대 150m) 안에 들어오면 복귀 인정
+  if(!gpsAccs.length) return 40;
+  const a=gpsAccs.reduce((s,x)=>s+x,0)/gpsAccs.length;
+  return Math.min(150, Math.max(40, a*1.8+15));
+}
 
 function fmtTime(s){ const m=Math.floor(s/60), ss=Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0'); }
 function fmtArea(a){ return Math.round(a).toLocaleString()+'㎡ (축구장 '+(a/7140).toFixed(1)+'개)'; }
@@ -1207,7 +1231,7 @@ function claimArea(){
 }
 function tryCloseLoop(p){
   if(loopDone || !walkStart || land<250) return;
-  if(p.distanceTo(walkStart)<40){ loopDone=true; claimArea(); }
+  if(p.distanceTo(walkStart)<closeRadius()){ loopDone=true; claimArea(); } // GPS 오차 평균 반영 반경
 }
 
 function onMove(lat,lng) {
@@ -1220,7 +1244,10 @@ function onMove(lat,lng) {
       toast('📡 GPS 끊김 구간을 자동 보정했어요 — 기록은 안 날아가요!');
     }
     dist+=d; land+=d;
-  } else { walkStart=p; }
+  } else {
+    walkStart=p;  // 시작 지점 = 출발지 🚩 (자유 산책도 여기 기준으로 구역 판정)
+    walkFlag=L.marker(p,{icon:L.divIcon({html:'<div style="font-size:20px">🚩</div>',iconSize:[22,22],iconAnchor:[4,20]}),interactive:false}).addTo(map);
+  }
   lastPos=p;
   if (!dogMarker) dogMarker=L.marker(p,{icon:L.divIcon({html:'<div class="dogMarker">🐕</div>',iconSize:[30,30],iconAnchor:[15,15]})}).addTo(map);
   else dogMarker.setLatLng(p);
@@ -1251,12 +1278,19 @@ function simStep(step) {
   onMove(a[0]+(b[0]-a[0])*segFrac, a[1]+(b[1]-a[1])*segFrac);
 }
 
-function startWalk() {
+async function startWalk() {
+  // 경로 없이 시작 = 자유 산책: 시작 지점이 출발지가 되고, 지나간 길이 그대로 기록됨
   if (!useGps && !course) {
-    toast('먼저 산책 경로를 만들어 주세요! ✏️ 버튼으로 직접 그리거나 🌳 추천 코스를 선택',3400);
-    enterDraw(); return;
+    toast('🐾 경로 없이 자유 산책 시작! 걷는 대로 자취가 남고, 출발지로 돌아오면 구역이 돼요',3200);
+    const cs=await bestLoop(1.2,2);
+    if(!cs){ toast('⚠️ 경로 서버 연결 실패 — 🌳 추천 코스로 시도해 주세요'); return; }
+    course=cs; clearCourseLayers(); // 미리보기 선 없이 그냥 출발 (시뮬레이션용 이동 경로만 내부 사용)
+    $('courseTxt').innerHTML='<b>자유 산책 중</b> · 정해진 경로 없음 · 🚩출발지 복귀 시 구역 점령';
   }
   walking=true; dist=0; land=0; steals=0; loopDone=false; areaClaimed=0; segIdx=0; segFrac=0; lastPos=null; walkStart=null;
+  gpsAccs.length=0; hrSum=0; hrN=0; hr=118;
+  if(watchOn){ $('hrLine').style.display='block'; $('hrV').textContent='--'; }
+  if(walkFlag){ map.removeLayer(walkFlag); walkFlag=null; }
   if (myBand){map.removeLayer(myBand);map.removeLayer(myLine);myBand=myLine=null;}
   if (fillPoly){map.removeLayer(fillPoly);fillPoly=null;}
   startTime=Date.now();
@@ -1265,10 +1299,18 @@ function startWalk() {
   walkTimer=setInterval(()=>{
     $('stTime').textContent=fmtTime((Date.now()-startTime)/1000);
     if (!useGps) simStep(13);
+    if (watchOn && walking){ // ⌚ 심박 (연동 시뮬레이션)
+      hr=Math.min(165,Math.max(105,hr+Math.floor(Math.random()*7)-3));
+      hrSum+=hr; hrN++;
+      $('hrV').textContent=hr;
+    }
   },130);
   if (useGps&&navigator.geolocation) {
     gpsWatch=navigator.geolocation.watchPosition(
-      pos=>onMove(pos.coords.latitude,pos.coords.longitude),
+      pos=>{
+        gpsAccs.push(pos.coords.accuracy||30); if(gpsAccs.length>30) gpsAccs.shift(); // 오차 표본 수집
+        onMove(pos.coords.latitude,pos.coords.longitude);
+      },
       ()=>toast('⚠️ 위치 권한이 필요해요. 시뮬레이션으로 체험해 보세요'),
       {enableHighAccuracy:true,maximumAge:2000});
   }
@@ -1279,8 +1321,9 @@ function stopWalk() {
   walking=false; clearInterval(walkTimer);
   if (gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}
   $('btnWalk').textContent='▶ 산책 시작'; $('btnWalk').classList.remove('stop');
-  // 출발지 근처(120m 이내) 종료 → GPS 오차 보정으로 자동 마감하고 구역 인정
-  if(!loopDone && walkStart && lastPos && land>250 && lastPos.distanceTo(walkStart)<120){
+  $('hrLine').style.display='none';
+  // 출발지 근처 종료 → GPS 오차 평균 기반 보정 반경으로 자동 마감하고 구역 인정
+  if(!loopDone && walkStart && lastPos && land>250 && lastPos.distanceTo(walkStart)<Math.max(120, closeRadius()+40)){
     loopDone=true;
     L.polyline([lastPos,walkStart],{color:'#F0507E',weight:3,dashArray:'2 6',interactive:false}).addTo(map);
     claimArea();
@@ -1293,9 +1336,10 @@ function stopWalk() {
   $('repTime').textContent=fmtTime(sec);
   $('repLand').textContent=loopDone?fmtArea(areaClaimed).split(' ')[0]:'미점령';
   $('repPts').textContent='+'+pts+'P';
-  $('repMsg').textContent=loopDone
+  const hrTxt=(watchOn&&hrN>0)?` · ⌚ 평균 심박 ${Math.round(hrSum/hrN)}bpm`:'';
+  $('repMsg').textContent=(loopDone
     ?`${fmtArea(areaClaimed)} 점령! 탈환 ${steals}건. 점령 구역은 7일간 재방문이 없으면 서서히 중립화돼요.`
-    :'구역은 미점령이지만 자취·거리 기록은 안전하게 저장됐어요. 출발지 120m 안에서 종료하면 GPS 오차를 보정해 구역으로 인정해 드려요!';
+    :'구역은 미점령이지만 자취·거리 기록은 안전하게 저장됐어요. 출발지 근처(GPS 오차 보정 반경 안)에서 종료하면 자동으로 구역이 인정돼요!')+hrTxt;
   $('repModal').classList.add('show');
   const cur=parseInt($('ptsBox').textContent.replace(/[^0-9]/g,''));
   $('ptsBox').textContent='🦴 '+(cur+pts).toLocaleString()+' P';
@@ -1303,6 +1347,16 @@ function stopWalk() {
 }
 
 $('btnWalk').addEventListener('click',()=>walking?stopWalk():startWalk());
+
+// ⌚ 워치 연동
+$('btnWatchSet').addEventListener('click',()=>$('watchModal').classList.add('show'));
+function setWatch(nm){
+  watchOn=true; watchName=nm; $('hrW').textContent=nm;
+  $('wA').textContent=nm==='Apple Watch'?'연결됨 ✓':'연결';
+  $('wG').textContent=nm==='갤럭시 워치'?'연결됨 ✓':'연결';
+  $('watchModal').classList.remove('show');
+  toast(`⌚ ${nm} 연동 완료! 산책 시작하면 심박이 실시간 표시돼요`);
+}
 
 // 모드
 $('modeSim').addEventListener('click',()=>{useGps=false;$('modeSim').classList.add('on');$('modeGps').classList.remove('on');});
@@ -1326,6 +1380,39 @@ function destPoint(lat,lng,distM,bearing){
   const br=bearing*Math.PI/180;
   return [lat+distM*Math.cos(br)/110540, lng+distM*Math.sin(br)/(111320*Math.cos(lat*Math.PI/180))];
 }
+// ---- 경로 품질 채점: 막다른길(왕복 스퍼)·골목 위주 경로를 걸러냄 ----
+async function fetchRoute(wp){
+  const q=wp.map(w=>w[1]+','+w[0]).join(';');
+  const res=await fetch(`https://routing.openstreetmap.de/routed-foot/route/v1/driving/${q}?geometries=geojson&overview=full`);
+  const j=await res.json();
+  return j.routes[0].geometry.coordinates.map(p=>[p[1],p[0]]);
+}
+function backtrackRatio(cs){ // 같은 길을 되돌아오는(막다른길) 비율
+  let hits=0,n=0;
+  for(let i=0;i<cs.length;i+=3){
+    if(i<cs.length*0.1) { n++; continue; }
+    for(let j=i+9;j<cs.length*0.9;j+=3){
+      if(map.distance(cs[i],cs[j])<12){ hits++; break; }
+    }
+    n++;
+  }
+  return hits/Math.max(1,n);
+}
+function avgSeg(cs){ return courseLen(cs)/(cs.length-1); } // 클수록 큰길·직선 위주
+async function bestLoop(km, tries=3){
+  const c=map.getCenter(), r=km*1000/(2*Math.PI)*1.15;
+  let best=null, bestScore=1e9;
+  for(let t=0;t<tries;t++){
+    const ang=Math.floor(Math.random()*360);
+    const wp=[[c.lat,c.lng], destPoint(c.lat,c.lng,r,ang), destPoint(c.lat,c.lng,r*1.3,ang+120), destPoint(c.lat,c.lng,r,ang+240), [c.lat,c.lng]];
+    try{
+      const cs=await fetchRoute(wp);
+      const score=backtrackRatio(cs)*100 - avgSeg(cs)*0.6; // 왕복↓ + 큰길·직선↑
+      if(score<bestScore){ bestScore=score; best=cs; }
+    }catch(e){}
+  }
+  return best;
+}
 async function pickCourse(type){
   $('courseModal').classList.remove('show');
   if(type==='park'){
@@ -1333,20 +1420,32 @@ async function pickCourse(type){
     toast('🌳 공원 산책로 포함 코스예요. 화살표 방향으로 돌아요!',3000);
     return;
   }
-  const km=type, c=map.getCenter();
+  if(type==='raid'){ // ⚔️ 인근 상대 영토를 관통하는 탈환 코스
+    const c=map.getCenter();
+    let target=null, bd=1e9;
+    rivals.forEach(rv=>{
+      if(!rv.geom.length) return;
+      const ct=ringCentroid(rv.geom[0][0]);
+      const d=map.distance([c.lat,c.lng],ct);
+      if(d<bd){ bd=d; target=ct; }
+    });
+    if(!target || bd>4000){ toast('4km 안에 뺏을 상대 영토가 없어요. 데모존(여의도)에서 시도해 보세요!'); return; }
+    toast('⚔️ 상대 영토를 관통하는 탈환 코스 계산 중...');
+    try{
+      const cs=await fetchRoute([[c.lat,c.lng], target, destPoint(target[0],target[1],250,Math.random()*360), [c.lat,c.lng]]);
+      setCourse(cs,'⚔️ 영토 뺏기 코스');
+      toast('⚔️ 이 코스로 한 바퀴 돌면 겹친 상대 영토를 탈환해요!',3400);
+    }catch(e){ toast('⚠️ 경로 서버 연결 실패 — 잠시 후 다시 시도해 주세요'); }
+    return;
+  }
+  const km=type;
   lastKm=km;
-  toast(`🛣️ 내 위치 기준 약 ${km}km 왕복 코스 계산 중...`);
-  const r=km*1000/(2*Math.PI)*1.15;
-  const ang=Math.floor(Math.random()*360);
-  const wp=[[c.lat,c.lng], destPoint(c.lat,c.lng,r,ang), destPoint(c.lat,c.lng,r*1.3,ang+120), destPoint(c.lat,c.lng,r,ang+240), [c.lat,c.lng]];
-  try{
-    const q=wp.map(w=>w[1]+','+w[0]).join(';');
-    const res=await fetch(`https://routing.openstreetmap.de/routed-foot/route/v1/driving/${q}?geometries=geojson&overview=full`);
-    const j=await res.json();
-    const cs=j.routes[0].geometry.coordinates.map(p=>[p[1],p[0]]);
+  toast(`🛣️ 후보 경로 여러 개를 비교해서 큰길·인도 위주로 고르는 중...`,3000);
+  const cs=await bestLoop(km);
+  if(cs){
     setCourse(cs,`내 위치 ${km}km 추천 코스`);
-    toast('✅ 실제 보행길 기준 왕복 코스 완성! 마음에 안 들면 다시 뽑아보세요',3200);
-  }catch(e){ toast('⚠️ 경로 서버 연결 실패 — 잠시 후 다시 시도해 주세요'); }
+    toast('✅ 막다른길·왕복 구간이 적은 코스로 골랐어요! 별로면 🎲 다시뽑기',3400);
+  } else toast('⚠️ 경로 서버 연결 실패 — 잠시 후 다시 시도해 주세요');
 }
 
 // ================== 경로 직접 세팅 (탭 → 실제 보행길 왕복 코스) ==================
