@@ -345,6 +345,7 @@
   .rvRow .t { color:#555; margin-top:3px; line-height:1.45; }
   .bkChip { border:1.5px solid #eee; background:#fff; border-radius:999px; padding:7px 13px; font-size:11.5px; font-weight:700; color:#555; cursor:pointer; }
   .bkChip.on { border-color:#F0507E; background:#FDEEF3; color:#E8446D; }
+  .bkChip.off { opacity:.38; text-decoration:line-through; pointer-events:none; }
   .chipWrap { display:flex; gap:7px; flex-wrap:wrap; margin:7px 0 11px; }
   .mnRow { display:flex; align-items:center; font-size:12px; padding:8px 2px; border-bottom:1px solid #f4f1ec; }
   .mnRow b { margin-left:auto; }
@@ -545,8 +546,8 @@
         <div class="careItem"><div class="em">📋</div><div class="tx"><b>폭염 주의 — 당분간 아침 7시 산책으로 변경</b><span>운영진 · 8/7</span></div><div class="due ok">확인</div></div>
 
         <div class="secT">⚡ 이번 주 댕벙 <span style="font-weight:600;color:#999;font-size:11px">— 장소 예약까지 앱에서 한 번에</span></div>
-        <div class="meetCard"><div class="t">토요일 아침 여의도공원 합동 산책 🌳</div><div class="d">8/15(토) 08:00 · 여의도공원 북문 · 정원 12팀 (현재 9팀)<br>산책 후 댕댕카페 티타임 — <b style="color:#E8446D">☕ 장소 예약 완료</b></div><button class="joinBtn" onclick="this.textContent='✅ 참석 신청 완료';this.classList.add('done');toast('참석 완료! 전날 리마인드 알림을 보내드려요')">참석 신청</button></div>
-        <div class="meetCard"><div class="t">소형견 사회화 클래스 댕벙 🎾</div><div class="d">8/17(월) 19:30 · 멍멍 실내놀이터 · 정원 8팀 (현재 3팀)<br>참가비 무료 · <b style="color:#E8446D">🎟️ 놀이터 20% 할인 적용</b></div><button class="joinBtn" onclick="this.textContent='✅ 참석 신청 완료';this.classList.add('done');toast('참석 완료! 전날 리마인드 알림을 보내드려요')">참석 신청</button></div>
+        <div class="meetCard"><div class="t">토요일 아침 여의도공원 합동 산책 🌳</div><div class="d">8/15(토) 08:00 · 여의도공원 북문 · 정원 12팀 (현재 9팀)<br>산책 후 댕댕카페 티타임 — <b style="color:#E8446D">☕ 단체석 예약 완료</b><br>💸 참가비 6,000원(음료) · <b style="color:#E8446D">참석 확정 인원끼리 자동 N빵 정산</b></div><button class="joinBtn" onclick="this.textContent='✅ 참석 확정 · 정산 예약됨';this.classList.add('done');toast('참석 확정! 캘린더에 자동 등록 + 전날 리마인드. 참가비는 모임 확정 후 자동 정산(불참 시 자동 환불)돼요',3800)">참석 신청</button></div>
+        <div class="meetCard"><div class="t">소형견 사회화 클래스 댕벙 🎾</div><div class="d">8/17(월) 19:30 · 멍멍 실내놀이터 · 정원 8팀 (현재 3팀)<br>💸 입장료 12,000원 → <b style="color:#E8446D">댕벙 단체 할인 9,600원 · 자동 정산</b></div><button class="joinBtn" onclick="this.textContent='✅ 참석 확정 · 정산 예약됨';this.classList.add('done');toast('참석 확정! 캘린더에 자동 등록 + 전날 리마인드. 입장료는 단체할인가로 자동 정산돼요',3800)">참석 신청</button></div>
 
         <div class="secT">🏆 댕벙 영토 랭킹</div>
         <div class="rankItem me"><div class="no m">🥇</div><div class="av">🐾</div><div class="info"><div class="nm">여의도 소형견 산책모임</div><div class="dt">84명 · 합산 영토 892,000㎡</div></div><div class="tile">1위</div></div>
@@ -599,6 +600,11 @@
           <button onclick="showPage('pageRoad')">📍 로드샵</button>
         </div>
         <div class="ptBanner" onclick="openPoints()" style="cursor:pointer">🦴 보유 포인트 <b id="shopPts">1,240P</b> — 산책으로 모은 포인트를 결제에 바로 쓸 수 있어요! <u style="font-size:11px">내역 보기</u></div>
+        <div class="rebuyCard" style="border-style:solid;border-color:#F9D2DF;background:#FFF7FA">
+          <div class="em">🧮</div>
+          <div><b>최대 할인 자동 적용</b><span>포인트+쿠폰 최적 조합을 앱이 알아서 계산 — 유저는 머리 쓸 필요 없음</span></div>
+          <button id="autoDc" style="background:#F0507E" onclick="this._off=!this._off;this.textContent=this._off?'OFF':'ON ✓';this.style.background=this._off?'#ccc':'#F0507E';toast(this._off?'자동 할인 꺼짐':'✅ 결제할 때마다 포인트+쿠폰 최대 할인 조합이 자동 적용돼요')">ON ✓</button>
+        </div>
         <div class="dealBanner"><div class="em">🏷️</div><div><div class="t">오늘의 딜 — QR 인식표 세트 30%</div><div class="d">동물등록 대행 신청과 함께하면 추가 할인!</div></div><div class="tm">⏰ 04:12:33</div></div>
         <div class="secT" style="margin-top:0">🔥 실시간 베스트</div>
         <div class="bestRow" id="bestRow"></div>
@@ -820,9 +826,16 @@
       <select class="optSel" id="dpOpt"><option>옵션 선택</option><option>단품</option><option>2개 세트 (5% 추가할인)</option><option>정기배송 34일 주기 (7% 할인)</option></select>
       <div class="secT" style="margin-top:10px">💬 리뷰 <span style="color:#999;font-weight:600;font-size:11px" id="dpRvCnt"></span></div>
       <div id="dpRvs"></div>
-      <div style="display:flex;gap:8px;margin-top:12px">
+      <div class="secT" style="margin-top:10px">💳 간편결제</div>
+      <div class="chipWrap" id="payRow">
+        <button class="bkChip on" onclick="payPick(this)">💛 카카오페이</button>
+        <button class="bkChip" onclick="payPick(this)">💚 네이버페이</button>
+        <button class="bkChip" onclick="payPick(this)">🔵 토스페이</button>
+      </div>
+      <div style="background:#FFF7FA;border:1.5px dashed #F9D2DF;border-radius:12px;padding:9px 12px;font-size:11px;color:#C25B7C;font-weight:700;margin-bottom:11px">🧮 최대 할인 자동 적용됨: 포인트 3,000P + 첫구매 쿠폰 = <b>-4,370원</b></div>
+      <div style="display:flex;gap:8px">
         <button class="pBtn" onclick="this.textContent='✅ 담김';toast('장바구니에 담았어요!')">🛒 담기</button>
-        <button class="pBtn main" onclick="toast('구매 완료! 포인트 1,000P 사용 · 내일 도착 (데모)')">바로구매</button>
+        <button class="pBtn main" onclick="toast(`✅ ${curPay} 원터치 결제 완료! 최대 할인 -4,370원 자동 적용 · 내일 도착 (데모)`,3400)">바로구매</button>
       </div>
       <button class="closeBtn" data-close="prodModal" style="margin-top:8px">닫기</button>
     </div>
@@ -841,10 +854,12 @@
       <div id="dsMenu"></div>
       <div class="secT">💬 리뷰 <span style="color:#999;font-weight:600;font-size:11px" id="dsRvCnt"></span></div>
       <div id="dsRvs"></div>
-      <div class="secT">📅 예약하기</div>
+      <div class="secT">📅 예약하기 <span style="color:#999;font-weight:600;font-size:11px">— 빈자리는 바로 확정 (업체 캘린더 실시간 연동)</span></div>
       <div class="chipWrap" id="dsDates"></div>
       <div class="chipWrap" id="dsTimes"></div>
-      <button class="shareBtn" style="background:#F0507E" id="dsBook">이 시간으로 예약하기</button>
+      <div style="background:#F6F4F1;border-radius:12px;padding:10px 12px;font-size:11px;color:#666;line-height:1.6;margin-bottom:11px">📎 <b>예약 시 업체에 자동 전달</b> — 🐶 초코 프로필 · 💉 접종증명서 · 🍖 특이사항(알러지)<br>따로 서류 챙길 필요 없어요!</div>
+      <button class="shareBtn" style="background:#F0507E" id="dsBook">💳 선결제 1,000원으로 즉시 확정</button>
+      <div style="font-size:10px;color:#aaa;text-align:center;margin-bottom:8px">선결제는 방문 시 결제금액에서 차감 · 노쇼 방지용 (24시간 전 취소 시 전액 환불)</div>
       <button class="closeBtn" data-close="shopModal">닫기</button>
     </div>
   </div>
@@ -1818,8 +1833,16 @@ function openShop(i){
   $('dsRvCnt').textContent=r.meta.split(' ')[1]||'';
   $('dsRvs').innerHTML=x.rvs.map(v=>`<div class="rvRow"><span class="u">${v.u}</span> <span class="st">${'★'.repeat(v.r)}</span><div class="t">${v.t}</div></div>`).join('');
   $('dsDates').innerHTML=['오늘','내일','토','일'].map(d=>`<button class="bkChip" onclick="selBk(this,'date','${d}')">${d}</button>`).join('');
-  $('dsTimes').innerHTML=['10:00','13:00','15:30','17:00','19:00'].map(t=>`<button class="bkChip" onclick="selBk(this,'time','${t}')">${t}</button>`).join('');
+  // 업체가 미리 짜둔 스케줄 — 찬 시간은 마감 표시, 빈자리만 선택 가능
+  $('dsTimes').innerHTML=[['10:00',1],['13:00',0],['15:30',1],['17:00',1],['19:00',0]].map(([t,ok])=>
+    `<button class="bkChip ${ok?'':'off'}" onclick="selBk(this,'time','${t}')">${t}${ok?'':' 마감'}</button>`).join('');
   $('shopModal').classList.add('show');
+}
+let curPay='카카오페이';
+function payPick(btn){
+  btn.parentElement.querySelectorAll('.bkChip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  curPay=btn.textContent.replace(/^[^ ]+ /,'');
 }
 function selBk(btn,kind,val){
   btn.parentElement.querySelectorAll('.bkChip').forEach(b=>b.classList.remove('on'));
@@ -1829,7 +1852,7 @@ function selBk(btn,kind,val){
 $('dsBook').addEventListener('click',()=>{
   if(!bkDate||!bkTime) return toast('날짜와 시간을 먼저 선택해 주세요!');
   $('shopModal').classList.remove('show');
-  toast(`✅ ${bkShop} ${bkDate} ${bkTime} 예약 요청 완료! 확정되면 알림을 보내드려요`,3400);
+  toast(`✅ ${bkShop} ${bkDate} ${bkTime} 즉시 확정! 프로필·접종증명서 자동 전달 완료 · 선결제 1,000원은 방문 결제 시 차감돼요`,3800);
 });
 
 // ================== 댕벙: 지역별 리스트 + 프로필 + 가입 + 채팅 ==================
