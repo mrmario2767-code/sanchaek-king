@@ -90,7 +90,8 @@
   #sheet .grab { width:44px; height:4px; background:#ddd; border-radius:2px; margin:0 auto 8px; }
   #courseInfo { font-size:12px; color:#666; text-align:center; margin-bottom:9px; display:flex; align-items:center; justify-content:center; gap:7px; flex-wrap:wrap; }
   #courseInfo b { color:#E8446D; }
-  #btnPreset { border:none; background:#FDEEF3; color:#E8446D; font-weight:700; font-size:11px; padding:5px 11px; border-radius:999px; cursor:pointer; white-space:nowrap; }
+  #btnPreset, #btnShuffle { border:none; background:#FDEEF3; color:#E8446D; font-weight:700; font-size:11px; padding:5px 11px; border-radius:999px; cursor:pointer; white-space:nowrap; }
+  #btnShuffle { background:#FFF; border:1.5px solid #F9D2DF; }
   #drawBar { position:absolute; top:64px; left:12px; right:12px; z-index:1050; display:none; align-items:center; gap:8px; background:#fff; border-radius:999px; padding:8px 8px 8px 14px; box-shadow:0 4px 14px rgba(60,40,50,.18); font-size:11.5px; color:#555; font-weight:600; }
   #drawBar span { flex:1; }
   #drawBar b { color:#E8446D; }
@@ -483,7 +484,7 @@
       <div id="lostBanner">🆘 유실 모드 작동 중 — 주변 산책 유저에게 초코의 사진과 특징이 전파되고 있어요 <u onclick="endLost()" style="float:right;cursor:pointer">해제</u></div>
       <div id="sheet">
         <div class="grab"></div>
-        <div id="courseInfo"><span id="courseTxt">📍 산책할 경로를 먼저 만들어 주세요</span> <button id="btnPreset">🌳 추천 코스</button></div>
+        <div id="courseInfo"><span id="courseTxt">📍 산책할 경로를 먼저 만들어 주세요</span> <button id="btnPreset">🌳 추천 코스</button><button id="btnShuffle" title="다른 코스 뽑기">🎲 다시뽑기</button></div>
         <div class="statRow">
           <div class="stat"><div class="v" id="stTime">00:00</div><div class="k">시간</div></div>
           <div class="stat"><div class="v" id="stDist">0.00<small style="font-size:11px">km</small></div><div class="k">거리</div></div>
@@ -1317,7 +1318,10 @@ $('btnLocate').addEventListener('click',()=>{
 });
 
 // 추천 코스: km별 여러 개, 내 위치 기준 실시간 생성
+let lastKm=3;
 $('btnPreset').addEventListener('click',()=>$('courseModal').classList.add('show'));
+// 🎲 같은 거리로 새로운 랜덤 코스 다시 뽑기 (매번 다른 방향의 길로 생성)
+$('btnShuffle').addEventListener('click',()=>{ toast('🎲 같은 거리, 다른 길로 새 코스 뽑는 중...'); pickCourse(lastKm); });
 function destPoint(lat,lng,distM,bearing){
   const br=bearing*Math.PI/180;
   return [lat+distM*Math.cos(br)/110540, lng+distM*Math.sin(br)/(111320*Math.cos(lat*Math.PI/180))];
@@ -1330,6 +1334,7 @@ async function pickCourse(type){
     return;
   }
   const km=type, c=map.getCenter();
+  lastKm=km;
   toast(`🛣️ 내 위치 기준 약 ${km}km 왕복 코스 계산 중...`);
   const r=km*1000/(2*Math.PI)*1.15;
   const ang=Math.floor(Math.random()*360);
