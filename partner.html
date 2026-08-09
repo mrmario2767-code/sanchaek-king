@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>산책왕 사장님 센터 — 데모</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif; background:#F6F4F1; color:#333; }
+#top { height:58px; background:#fff; border-bottom:1px solid #eee; display:flex; align-items:center; padding:0 20px; gap:16px; position:sticky; top:0; z-index:100; }
+#top .logo { font-weight:800; font-size:17px; color:#E8446D; }
+#top .logo small { color:#999; font-weight:700; font-size:12px; margin-left:6px; }
+#top select { border:1.5px solid #eee; border-radius:10px; padding:8px 12px; font-size:13px; font-family:inherit; font-weight:700; color:#444; }
+#top .sp { flex:1; }
+#top .bell { position:relative; border:none; background:#F6F4F1; width:36px; height:36px; border-radius:50%; font-size:16px; cursor:pointer; }
+#top .bell span { position:absolute; top:-3px; right:-3px; background:#F0507E; color:#fff; font-size:9px; font-weight:800; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+#wrap { display:flex; max-width:1200px; margin:0 auto; }
+#side { width:200px; flex:0 0 auto; padding:18px 12px; }
+#side button { display:flex; align-items:center; gap:9px; width:100%; border:none; background:none; padding:11px 13px; border-radius:12px; font-size:13.5px; font-weight:700; color:#777; cursor:pointer; text-align:left; }
+#side button.on { background:#F0507E; color:#fff; box-shadow:0 4px 12px rgba(240,80,126,.3); }
+#main { flex:1; padding:20px 20px 40px; min-width:0; }
+.view { display:none; }
+.view.on { display:block; }
+h1 { font-size:19px; margin-bottom:4px; }
+.cap { font-size:12px; color:#999; margin-bottom:16px; }
+.cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+.card { background:#fff; border-radius:16px; padding:16px; box-shadow:0 4px 14px rgba(60,40,50,.05); }
+.card .v { font-size:22px; font-weight:800; color:#E8446D; }
+.card .k { font-size:11.5px; color:#999; margin-top:3px; }
+.card .d { font-size:10.5px; color:#bbb; margin-top:2px; }
+.panel { background:#fff; border-radius:16px; padding:18px; box-shadow:0 4px 14px rgba(60,40,50,.05); margin-bottom:14px; }
+.panel h2 { font-size:14.5px; margin-bottom:12px; }
+.row { display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid #f4f1ec; font-size:13px; }
+.row:last-child { border-bottom:none; }
+.row .av { width:38px; height:38px; border-radius:50%; overflow:hidden; flex:0 0 auto; background:#FDEEF3; }
+.row .av img { width:100%; height:100%; object-fit:cover; }
+.row b { font-size:13px; }
+.row .sub { font-size:11px; color:#999; margin-top:2px; }
+.row .end { margin-left:auto; display:flex; gap:7px; align-items:center; }
+.pill { border:none; border-radius:999px; padding:8px 15px; font-size:12px; font-weight:800; cursor:pointer; }
+.pill.ok { background:#F0507E; color:#fff; }
+.pill.no { background:#F6F4F1; color:#888; }
+.pill.gold { background:#FDF3E2; color:#C07D1A; }
+.tag { font-size:10px; font-weight:800; padding:3px 8px; border-radius:8px; background:#FDEEF3; color:#E8446D; }
+.tag.gr { background:#EAF7EE; color:#2E8B57; }
+
+/* 캘린더 */
+.calHead { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.calHead button { border:1.5px solid #eee; background:#fff; border-radius:10px; padding:7px 12px; font-size:12.5px; font-weight:700; cursor:pointer; }
+.calHead .wk { font-weight:800; font-size:14px; }
+.calGridP { display:grid; grid-template-columns:52px repeat(7,1fr); border-top:1px solid #f0ece6; border-left:1px solid #f0ece6; border-radius:0 0 4px 4px; overflow:auto; }
+.ch { background:#FAF8F5; font-size:11px; font-weight:800; color:#888; padding:8px 4px; text-align:center; border-right:1px solid #f0ece6; border-bottom:1px solid #f0ece6; }
+.ch.today { color:#E8446D; }
+.tc { font-size:9.5px; color:#bbb; text-align:right; padding:2px 5px 0 0; border-right:1px solid #f0ece6; border-bottom:1px solid #f0ece6; background:#FAF8F5; height:44px; }
+.cell { border-right:1px solid #f0ece6; border-bottom:1px solid #f0ece6; height:44px; position:relative; cursor:pointer; }
+.cell:hover { background:#FDF7FA; }
+.bk { position:absolute; left:3px; right:3px; border-radius:8px; padding:4px 7px; font-size:10px; font-weight:800; overflow:hidden; cursor:pointer; z-index:2; line-height:1.3; }
+.bk.c1 { background:#FDE0EA; color:#C43D68; border-left:3px solid #F0507E; }
+.bk.c2 { background:#E4EBFA; color:#4A62A8; border-left:3px solid #8FA8E8; }
+.bk.c3 { background:#E6F3E8; color:#3B7F4E; border-left:3px solid #7FBF8E; }
+.bk.req { background:#FFF4DC; color:#A8781E; border-left:3px solid #F0B95C; outline:2px dashed #F0B95C; }
+
+/* 메뉴 */
+.mnItem { display:flex; align-items:center; gap:12px; padding:12px 4px; border-bottom:1px solid #f4f1ec; font-size:13px; }
+.mnItem .ic { width:40px; height:40px; border-radius:12px; background:#F6F4F1; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.mnItem input[type=text] { border:none; font-size:13px; font-weight:700; font-family:inherit; width:220px; }
+.mnItem .pr { margin-left:auto; font-weight:800; }
+.addBtn { width:100%; border:1.5px dashed #F0B0C6; background:#FFF7FA; color:#E8446D; border-radius:12px; padding:12px; font-size:13px; font-weight:800; cursor:pointer; margin-top:10px; }
+
+/* 리뷰/통계 */
+.rv { padding:12px 4px; border-bottom:1px solid #f4f1ec; font-size:12.5px; }
+.rv .st { color:#f5a623; font-size:11px; }
+.rv .t { margin:5px 0 8px; color:#555; line-height:1.5; }
+.rv textarea { width:100%; border:1.5px solid #eee; border-radius:10px; padding:9px 11px; font-size:12px; font-family:inherit; resize:none; }
+.bars { display:flex; align-items:flex-end; gap:10px; height:120px; padding:10px 4px 0; }
+.bars .b { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.bars .stick { width:70%; background:linear-gradient(180deg,#F98BAB,#F0507E); border-radius:6px 6px 0 0; }
+.bars .lb { font-size:10px; color:#999; font-weight:700; }
+.srcRow { display:flex; align-items:center; gap:9px; font-size:12px; margin-bottom:8px; }
+.srcRow .track { flex:1; height:8px; background:#F6F4F1; border-radius:5px; overflow:hidden; }
+.srcRow .fill { height:100%; background:#F0507E; border-radius:5px; }
+.srcRow .who { width:150px; font-weight:700; color:#666; }
+.srcRow .pct { width:36px; text-align:right; font-weight:800; }
+
+#toast { position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:2000; background:rgba(30,30,30,.9); color:#fff; padding:10px 18px; border-radius:22px; font-size:13px; font-weight:600; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+#toast.show { opacity:1; }
+.modalBg { position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; }
+.modalBg.show { display:flex; }
+.modal { background:#fff; border-radius:18px; width:340px; padding:20px; }
+.modal h3 { font-size:15px; margin-bottom:4px; }
+.modal .sub { font-size:11.5px; color:#999; margin-bottom:12px; }
+.modal .info { background:#F6F4F1; border-radius:12px; padding:11px 13px; font-size:12.5px; line-height:1.7; margin-bottom:12px; }
+@media (max-width:800px){ #side{width:64px} #side button span.txt{display:none} .cards{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+<div id="top">
+  <div class="logo">산책왕 <small>사장님 센터</small></div>
+  <select id="bizSel" onchange="setBiz(this.value)">
+    <option value="cafe">☕ 댕댕카페 여의도점 (카페)</option>
+    <option value="groom">✂️ 멍스타일 미용실 (미용)</option>
+    <option value="hotel">🏨 포포 애견호텔 (호텔)</option>
+  </select>
+  <div class="sp"></div>
+  <button class="bell" onclick="toast('🔔 새 예약 요청 2건, 새 리뷰 1건')">🔔<span>3</span></button>
+</div>
+
+<div id="wrap">
+  <div id="side">
+    <button class="on" data-v="vDash" onclick="go(this)">📊 <span class="txt">대시보드</span></button>
+    <button data-v="vCal" onclick="go(this)">📅 <span class="txt">예약 관리</span></button>
+    <button data-v="vMenu" onclick="go(this)">📋 <span class="txt">메뉴·서비스</span></button>
+    <button data-v="vCp" onclick="go(this)">🎟️ <span class="txt">쿠폰·이벤트</span></button>
+    <button data-v="vRv" onclick="go(this)">💬 <span class="txt">리뷰 관리</span></button>
+    <button data-v="vSt" onclick="go(this)">📈 <span class="txt">통계</span></button>
+  </div>
+
+  <div id="main">
+    <!-- 대시보드 -->
+    <div class="view on" id="vDash">
+      <h1 id="dashTitle">☕ 댕댕카페 여의도점</h1>
+      <div class="cap">오늘도 산책왕 유저들이 가게 앞을 지나가고 있어요 — 실시간 노출 중 📍</div>
+      <div class="cards">
+        <div class="card"><div class="v">5건</div><div class="k">오늘 예약</div><div class="d">어제 3건</div></div>
+        <div class="card"><div class="v">37명</div><div class="k">이번 주 방문</div><div class="d">▲ 12% (지난주 대비)</div></div>
+        <div class="card"><div class="v">12건</div><div class="k">쿠폰 사용</div><div class="d">전환율 32%</div></div>
+        <div class="card"><div class="v">★4.8</div><div class="k">평점 (리뷰 156)</div><div class="d">답글 대기 1건</div></div>
+      </div>
+      <div class="panel">
+        <h2>📥 승인 대기 예약 <span class="tag">2건</span></h2>
+        <div class="row"><div class="av"><img src="https://images.unsplash.com/photo-1507146426996-ef05306b995a?w=80&q=60&fit=crop"></div>
+          <div><b>초코 (비숑) · 지율님</b><div class="sub">내일 15:30 · 2인 + 1견 · 첫 방문 · 요청: "창가 자리면 좋아요"</div></div>
+          <div class="end"><button class="pill ok" onclick="acc(this)">수락</button><button class="pill no" onclick="rej(this)">거절</button></div></div>
+        <div class="row"><div class="av"><img src="https://images.unsplash.com/photo-1577175889968-f551f5944abd?w=80&q=60&fit=crop"></div>
+          <div><b>몽이 (푸들) · 몽이네님</b><div class="sub">토 11:00 · 4인 + 2견 · 단골 (7회) · 댕벙 모임 예약</div></div>
+          <div class="end"><span class="tag gr">댕벙 20% 적용</span><button class="pill ok" onclick="acc(this)">수락</button><button class="pill no" onclick="rej(this)">거절</button></div></div>
+      </div>
+      <div class="panel">
+        <h2>🏆 진행 중인 영토 이벤트</h2>
+        <div class="row"><div style="font-size:22px">👑</div>
+          <div><b>가게 앞 구역 점령자 → 아메리카노 10% 자동 할인</b><div class="sub">이번 주 해당 유저 41명 · 방문 전환 9명</div></div>
+          <div class="end"><span class="tag gr">진행중</span></div></div>
+        <div class="row"><div style="font-size:22px">📣</div>
+          <div><b>산책 경로 타겟 노출</b><div class="sub">우리 가게 반경 500m를 지나는 산책 유저에게 핀 노출 · 이번 주 노출 1,240회</div></div>
+          <div class="end"><button class="pill gold" onclick="toast('광고 설정 (데모) — 월 33,000원부터')">설정</button></div></div>
+      </div>
+    </div>
+
+    <!-- 예약 캘린더 -->
+    <div class="view" id="vCal">
+      <h1>📅 예약 관리</h1>
+      <div class="cap" id="calCap">주간 캘린더 — 예약 블록을 클릭하면 상세·수락/거절이 가능해요. 노란 점선 = 승인 대기</div>
+      <div class="panel">
+        <div class="calHead">
+          <button onclick="toast('이전 주 (데모)')">‹</button>
+          <div class="wk">2026. 8. 10 (월) ~ 8. 16 (일)</div>
+          <button onclick="toast('다음 주 (데모)')">›</button>
+          <div style="flex:1"></div>
+          <button onclick="toast('영업시간·휴무 설정 (데모) — 요일별 오픈시간, 임시휴무, 예약 정원 설정')">⚙️ 영업시간 설정</button>
+          <button onclick="toast('예약 직접 추가 (데모) — 전화 예약도 캘린더에 등록')">＋ 직접 추가</button>
+        </div>
+        <div class="calGridP" id="calGrid"></div>
+      </div>
+    </div>
+
+    <!-- 메뉴 -->
+    <div class="view" id="vMenu">
+      <h1>📋 메뉴 · 서비스 관리</h1>
+      <div class="cap" id="menuCap">업종에 맞는 템플릿으로 관리돼요. 가격·이름을 바로 수정할 수 있어요 (데모)</div>
+      <div class="panel"><div id="menuList"></div>
+        <button class="addBtn" onclick="toast('항목 추가 (데모) — 사진·설명·옵션까지 등록 가능')">＋ 새 항목 추가</button>
+      </div>
+    </div>
+
+    <!-- 쿠폰 -->
+    <div class="view" id="vCp">
+      <h1>🎟️ 쿠폰 · 이벤트</h1>
+      <div class="cap">발행하면 주변 산책 유저의 지도에 바로 노출돼요</div>
+      <div class="panel">
+        <h2>발행 중인 쿠폰</h2>
+        <div class="row"><div style="font-size:22px">🎟️</div><div><b>아메리카노 10% 할인</b><div class="sub">구역 점령자 대상 · 사용 12 / 발행 41</div></div><div class="end"><span class="tag gr">진행중</span><button class="pill no" onclick="toast('쿠폰 중지 (데모)')">중지</button></div></div>
+        <div class="row"><div style="font-size:22px">🦴</div><div><b>산책 완료 유저 음료 서비스</b><div class="sub">오늘 산책 완료자 대상 · 사용 5 / 발행 23</div></div><div class="end"><span class="tag gr">진행중</span><button class="pill no" onclick="toast('쿠폰 중지 (데모)')">중지</button></div></div>
+      </div>
+      <div class="panel">
+        <h2>새 쿠폰 발행</h2>
+        <div class="row"><div>대상</div><div class="end"><select style="border:1.5px solid #eee;border-radius:10px;padding:8px;font-family:inherit"><option>주간 랭킹 10위 이내</option><option>가게 앞 구역 점령자</option><option>댕벙 모임 방문</option><option>첫 방문 유저</option></select></div></div>
+        <div class="row"><div>혜택</div><div class="end"><select style="border:1.5px solid #eee;border-radius:10px;padding:8px;font-family:inherit"><option>10% 할인</option><option>20% 할인</option><option>서비스 증정</option></select></div></div>
+        <button class="addBtn" onclick="toast('🎟️ 쿠폰 발행 완료! 조건에 맞는 유저 지도에 즉시 노출돼요 (데모)')">쿠폰 발행하기</button>
+      </div>
+    </div>
+
+    <!-- 리뷰 -->
+    <div class="view" id="vRv">
+      <h1>💬 리뷰 관리</h1>
+      <div class="cap">방문 인증된 유저만 리뷰를 남길 수 있어요 (조작 방지)</div>
+      <div class="panel">
+        <div class="rv"><b>감**님</b> <span class="st">★★★★★</span> <span class="tag gr">방문 인증</span><div class="t">구역 점령 쿠폰으로 할인받았어요 ㅋㅋ 재밌는 시스템! 댕푸치노도 잘 먹네요</div>
+          <textarea rows="2" placeholder="사장님 답글 달기..."></textarea><button class="pill ok" style="margin-top:7px" onclick="toast('답글 등록! 고객에게 알림이 가요 (데모)')">답글 등록</button></div>
+        <div class="rv"><b>초**님</b> <span class="st">★★★★</span> <span class="tag gr">방문 인증</span><div class="t">주말 웨이팅이 좀 있어요. 그래도 강아지 자리 넓어서 좋아요</div>
+          <div style="background:#FDF7FA;border-radius:10px;padding:9px 11px;font-size:12px;margin-top:6px">↳ <b>사장님</b>: 주말에 붐벼서 죄송해요! 앱 웨이팅 등록하시면 순서 알림 드려요 🙏</div></div>
+      </div>
+    </div>
+
+    <!-- 통계 -->
+    <div class="view" id="vSt">
+      <h1>📈 통계</h1>
+      <div class="cap">산책왕이 우리 가게에 얼마나 손님을 데려오는지 보여드려요</div>
+      <div class="panel"><h2>주간 방문 추이</h2>
+        <div class="bars">
+          <div class="b"><div class="stick" style="height:40%"></div><div class="lb">월</div></div>
+          <div class="b"><div class="stick" style="height:55%"></div><div class="lb">화</div></div>
+          <div class="b"><div class="stick" style="height:35%"></div><div class="lb">수</div></div>
+          <div class="b"><div class="stick" style="height:65%"></div><div class="lb">목</div></div>
+          <div class="b"><div class="stick" style="height:80%"></div><div class="lb">금</div></div>
+          <div class="b"><div class="stick" style="height:100%"></div><div class="lb">토</div></div>
+          <div class="b"><div class="stick" style="height:70%"></div><div class="lb">일</div></div>
+        </div>
+      </div>
+      <div class="panel"><h2>유입 경로</h2>
+        <div class="srcRow"><div class="who">🗺️ 산책 지도 핀 노출</div><div class="track"><div class="fill" style="width:42%"></div></div><div class="pct">42%</div></div>
+        <div class="srcRow"><div class="who">🎟️ 쿠폰·영토 이벤트</div><div class="track"><div class="fill" style="width:27%"></div></div><div class="pct">27%</div></div>
+        <div class="srcRow"><div class="who">📍 로드샵 검색</div><div class="track"><div class="fill" style="width:19%"></div></div><div class="pct">19%</div></div>
+        <div class="srcRow"><div class="who">👥 댕벙 모임 방문</div><div class="track"><div class="fill" style="width:12%"></div></div><div class="pct">12%</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div class="modalBg" id="bkModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <h3 id="bmT">예약 상세</h3>
+    <div class="sub" id="bmS">-</div>
+    <div class="info" id="bmI">-</div>
+    <div style="display:flex;gap:8px">
+      <button class="pill ok" style="flex:1" onclick="document.getElementById('bkModal').classList.remove('show');toast('✅ 예약 확정! 고객에게 알림이 발송됐어요')">수락</button>
+      <button class="pill no" style="flex:1" onclick="document.getElementById('bkModal').classList.remove('show');toast('예약을 거절했어요. 사유가 고객에게 전달돼요')">거절</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+function toast(m,ms=2600){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),ms);}
+function go(b){document.querySelectorAll('#side button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));$(b.dataset.v).classList.add('on');}
+function acc(b){b.parentElement.innerHTML='<span class="tag gr">✅ 확정 · 알림 발송됨</span>';toast('예약 확정! 고객에게 확정 알림 + 전날 리마인드가 자동 발송돼요');}
+function rej(b){b.parentElement.innerHTML='<span class="tag">거절됨</span>';toast('예약을 거절했어요');}
+
+// ===== 업종 템플릿 =====
+const BIZ={
+ cafe:{t:'☕ 댕댕카페 여의도점',menuCap:'카페 템플릿 — 메뉴·가격·품절 관리',cal:'좌석 예약 + 웨이팅',
+  menu:[['☕','아메리카노','5,500원'],['🐶','댕푸치노 (강아지용)','4,000원'],['🍰','수제간식 플레이트','8,900원'],['🧁','댕댕 생일 케이크 (예약제)','25,000원']],
+  bks:[[1,10,'초코 · 2인+1견',1,'c1'],[1,15,'몽이 댕벙 6팀',2,'c2'],[2,13,'감자 · 3인+1견',1,'c3'],[3,11,'두부 · 2인+2견',1,'c1'],[4,14,'보리 · 생일파티',2,'c2'],[5,10,'단체 대관 문의',3,'req'],[5,16,'하늘 · 2인+1견',1,'c3'],[6,11,'별이 · 4인+2견',1,'req']]},
+ groom:{t:'✂️ 멍스타일 미용실',menuCap:'미용 템플릿 — 시술·소요시간·담당자 관리',cal:'시술 예약 (담당자별)',
+  menu:[['✂️','소형견 가위컷 (90분)','35,000원'],['🛁','위생미용+목욕 (60분)','25,000원'],['💆','스파+미용 패키지 (120분)','55,000원'],['🎀','부분컷·발톱 (30분)','12,000원']],
+  bks:[[1,10,'초코 · 가위컷 · 김실장',2,'c1'],[1,14,'몽이 · 스파패키지 · 박원장',3,'c2'],[2,11,'감자 · 위생미용',1,'c3'],[3,13,'두부 · 가위컷 · 김실장',2,'c1'],[4,10,'보리 · 부분컷',1,'c3'],[5,15,'신규 · 스파 문의',2,'req'],[6,10,'별이 · 가위컷',2,'req']]},
+ hotel:{t:'🏨 포포 애견호텔',menuCap:'호텔 템플릿 — 객실·박당 요금·재고 관리',cal:'객실 캘린더 (체크인~아웃)',
+  menu:[['🛏️','스탠다드룸 (재고 4)','1박 45,000원'],['🌟','디럭스룸 (재고 2)','1박 65,000원'],['📹','실시간캠+산책 추가','+15,000원'],['🚐','픽업 서비스 (편도)','+10,000원']],
+  bks:[[1,10,'초코 · 스탠다드 2박',8,'c1'],[3,10,'몽이 · 디럭스 1박',5,'c2'],[4,12,'감자 · 스탠다드 3박',9,'c3'],[6,10,'두부 · 디럭스 주말',7,'req']]},
+};
+let cur='cafe';
+function setBiz(k){cur=k;const b=BIZ[k];
+ $('dashTitle').textContent=b.t;$('menuCap').textContent=b.menuCap;
+ $('calCap').textContent=b.cal+' — 블록 클릭 시 상세. 노란 점선 = 승인 대기';
+ $('menuList').innerHTML=b.menu.map(m=>`<div class="mnItem"><div class="ic">${m[0]}</div><input type="text" value="${m[1]}" onchange="toast('저장됨 (데모)')"><div class="pr">${m[2]}</div><button class="pill no" onclick="toast('수정 (데모) — 가격·품절·사진 관리')">수정</button></div>`).join('');
+ drawCal(b.bks);
+ toast(b.t+' 템플릿으로 전환! 업종마다 캘린더와 메뉴 구조가 달라져요');}
+// 예약 블록: [요일(1~7), 시작시각, 라벨, 시간수, 색상클래스]
+function drawCal(bks){
+ const days=['월 10','화 11','수 12','목 13','금 14','토 15','일 16'];
+ let h='<div class="ch"></div>'+days.map((d,i)=>`<div class="ch ${i===5?'today':''}">${d}</div>`).join('');
+ for(let t=10;t<=19;t++){
+  h+=`<div class="tc">${t}:00</div>`;
+  for(let d=1;d<=7;d++){
+   const bk=bks.find(b=>b[0]===d&&b[1]===t);
+   h+=`<div class="cell" onclick="toast('빈 시간 — 여기 클릭해서 전화 예약도 직접 등록할 수 있어요 (데모)')">`;
+   if(bk) h+=`<div class="bk ${bk[4]}" style="height:${bk[3]*44-8}px" onclick='event.stopPropagation();openBk(${JSON.stringify(bk[2])},"${days[bk[0]-1]}요일 ${bk[1]}:00",${bk[3]})'>${bk[2]}</div>`;
+   h+='</div>';
+  }
+ }
+ $('calGrid').innerHTML=h;
+}
+function openBk(nm,when,span){
+ $('bmT').textContent=nm;
+ $('bmS').textContent='8월 '+when+' · '+span+'시간';
+ $('bmI').innerHTML='보호자 연락: 010-****-**** (앱 내 채팅으로 연결)<br>강아지 정보: 프로필·접종기록 자동 첨부<br>결제: 앱 내 선결제 (노쇼 방지 보증금 포함)';
+ $('bkModal').classList.add('show');
+}
+setBiz('cafe');
+setTimeout(()=>toast('👆 상단에서 업종을 바꿔보세요 — 카페/미용/호텔 템플릿이 달라져요',4000),600);
+</script>
+</body>
+</html>
